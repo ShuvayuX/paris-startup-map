@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Upload, Plus, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { Startup, Role } from '@/types';
 import { useMapContext } from '@/lib/MapContext';
 import { useToast } from "@/components/ui/use-toast";
 import mapboxgl from 'mapbox-gl';
+import { addStartup } from '@/lib/startups';
 
 // Temporary solution - in a real app, this would be an environment variable
 mapboxgl.accessToken = 'pk.eyJ1IjoiZXhhbXBsZXVzZXIiLCJhIjoiY2xybXBrbGp5MDUxbzJqbzJwamx1MnJmaSJ9.Ax0ESw7qy-RcnNE0LQUI5g';
@@ -53,7 +53,6 @@ const AddStartupForm: React.FC = () => {
   const [editingRoleIndex, setEditingRoleIndex] = useState<number | null>(null);
   const [showRoleForm, setShowRoleForm] = useState(false);
   
-  // Startup location
   const [location, setLocation] = useState({
     address: '',
     latitude: 48.8566,
@@ -63,7 +62,6 @@ const AddStartupForm: React.FC = () => {
   const [locationMap, setLocationMap] = useState<mapboxgl.Map | null>(null);
   const [locationMarker, setLocationMarker] = useState<mapboxgl.Marker | null>(null);
 
-  // Basic form data
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -72,13 +70,11 @@ const AddStartupForm: React.FC = () => {
     founded: new Date().getFullYear().toString()
   });
 
-  // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle role form input changes
   const handleRoleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (!currentRole) return;
     
@@ -86,13 +82,10 @@ const AddStartupForm: React.FC = () => {
     setCurrentRole(prev => prev ? { ...prev, [name]: value } : null);
   };
 
-  // Handle logo upload
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // In a real app, you would upload the file to a server
-    // Here we're just using a local preview
     const reader = new FileReader();
     reader.onload = () => {
       setLogoPreview(reader.result as string);
@@ -100,7 +93,6 @@ const AddStartupForm: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  // Toggle industry selection
   const toggleIndustry = (index: number) => {
     setIndustries(prev => 
       prev.map((ind, i) => 
@@ -109,7 +101,6 @@ const AddStartupForm: React.FC = () => {
     );
   };
 
-  // Add new industry
   const addIndustry = () => {
     if (!newIndustry.trim()) return;
     
@@ -120,7 +111,6 @@ const AddStartupForm: React.FC = () => {
     setNewIndustry('');
   };
 
-  // Initialize location map
   useEffect(() => {
     if (!locationMapRef || !showAddForm) return;
 
@@ -143,7 +133,6 @@ const AddStartupForm: React.FC = () => {
         longitude: lngLat.lng
       }));
 
-      // In a real app, you would use geocoding to get the address from coordinates
       reverseGeocode(lngLat.lng, lngLat.lat);
     });
 
@@ -155,9 +144,7 @@ const AddStartupForm: React.FC = () => {
     };
   }, [locationMapRef, showAddForm]);
 
-  // Simulate reverse geocoding - in a real app you would use Mapbox's geocoding API
   const reverseGeocode = async (lng: number, lat: number) => {
-    // This is a mock implementation
     setTimeout(() => {
       setLocation(prev => ({
         ...prev,
@@ -166,7 +153,6 @@ const AddStartupForm: React.FC = () => {
     }, 500);
   };
 
-  // Add or update role
   const addOrUpdateRole = () => {
     if (!currentRole || !currentRole.title || !currentRole.department) return;
     
@@ -178,14 +164,12 @@ const AddStartupForm: React.FC = () => {
     };
 
     if (editingRoleIndex !== null) {
-      // Update existing role
       setRoles(prev => 
         prev.map((role, index) => 
           index === editingRoleIndex ? updatedRole : role
         )
       );
     } else {
-      // Add new role
       setRoles(prev => [...prev, updatedRole]);
     }
     
@@ -194,19 +178,16 @@ const AddStartupForm: React.FC = () => {
     setShowRoleForm(false);
   };
 
-  // Edit role
   const editRole = (index: number) => {
     setCurrentRole(roles[index]);
     setEditingRoleIndex(index);
     setShowRoleForm(true);
   };
 
-  // Remove role
   const removeRole = (index: number) => {
     setRoles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Handle submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -231,9 +212,9 @@ const AddStartupForm: React.FC = () => {
       logo: logoPreview || `https://via.placeholder.com/150?text=${formData.name.substring(0, 2).toUpperCase()}`
     };
     
-    // In a real app, this would be sent to a server
-    // Here we're just adding it to the local array
-    setFilteredStartups(prev => [...prev, newStartup]);
+    addStartup(newStartup);
+    
+    setFilteredStartups([...filteredStartups, newStartup]);
     
     toast({
       title: "Startup Added",
@@ -244,7 +225,6 @@ const AddStartupForm: React.FC = () => {
     setShowAddForm(false);
   };
 
-  // Reset form
   const resetForm = () => {
     setLogoPreview(null);
     setFormData({
@@ -273,7 +253,6 @@ const AddStartupForm: React.FC = () => {
           
           <form onSubmit={handleSubmit} className="mt-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left column - Basic info */}
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="logo" className="block mb-2">Company Logo</Label>
@@ -399,7 +378,6 @@ const AddStartupForm: React.FC = () => {
                 </div>
               </div>
               
-              {/* Right column - Location and roles */}
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="address">Address in Paris *</Label>
@@ -524,7 +502,6 @@ const AddStartupForm: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Role Form Dialog */}
       <Dialog open={showRoleForm} onOpenChange={setShowRoleForm}>
         <DialogContent className="max-w-md">
           <DialogHeader>

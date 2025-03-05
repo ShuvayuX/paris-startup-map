@@ -38,6 +38,11 @@ export const filterStartups = (
   });
 };
 
+// Function to add a new startup
+export const addStartup = (startup: Startup): void => {
+  startups.push(startup);
+};
+
 // Default map view state centered on Paris
 export const DEFAULT_VIEW_STATE: MapViewState = {
   longitude: 2.3522,
