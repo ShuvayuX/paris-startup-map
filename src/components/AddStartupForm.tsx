@@ -33,10 +33,9 @@ const INITIAL_ROLE: Role = {
 };
 
 const AddStartupForm: React.FC = () => {
-  const { showAddForm, setShowAddForm } = useMapContext();
+  const { showAddForm, setShowAddForm, filteredStartups, setFilteredStartups } = useMapContext();
   const { toast } = useToast();
 
-  const [formStep, setFormStep] = useState(1);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [newIndustry, setNewIndustry] = useState('');
   const [industries, setIndustries] = useState<IndustryOption[]>([
@@ -123,7 +122,7 @@ const AddStartupForm: React.FC = () => {
 
   // Initialize location map
   useEffect(() => {
-    if (!locationMapRef || !showAddForm || formStep !== 2) return;
+    if (!locationMapRef || !showAddForm) return;
 
     const map = new mapboxgl.Map({
       container: locationMapRef,
@@ -154,7 +153,7 @@ const AddStartupForm: React.FC = () => {
     return () => {
       map.remove();
     };
-  }, [locationMapRef, showAddForm, formStep]);
+  }, [locationMapRef, showAddForm]);
 
   // Simulate reverse geocoding - in a real app you would use Mapbox's geocoding API
   const reverseGeocode = async (lng: number, lat: number) => {
@@ -211,14 +210,12 @@ const AddStartupForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In a real app, you would send the data to a server
-    // Here we're just showing a success toast
-    
     const selectedIndustries = industries
       .filter(ind => ind.selected)
       .map(ind => ind.name);
     
-    const newStartup: Partial<Startup> = {
+    const newStartup: Startup = {
+      id: `startup-${Date.now()}`,
       name: formData.name,
       description: formData.description,
       location: {
@@ -231,10 +228,12 @@ const AddStartupForm: React.FC = () => {
       size: formData.size,
       founded: parseInt(formData.founded),
       roles: roles,
-      logo: logoPreview || 'https://via.placeholder.com/150?text=' + formData.name.substring(0, 2).toUpperCase()
+      logo: logoPreview || `https://via.placeholder.com/150?text=${formData.name.substring(0, 2).toUpperCase()}`
     };
     
-    console.log('New startup data:', newStartup);
+    // In a real app, this would be sent to a server
+    // Here we're just adding it to the local array
+    setFilteredStartups(prev => [...prev, newStartup]);
     
     toast({
       title: "Startup Added",
@@ -247,7 +246,6 @@ const AddStartupForm: React.FC = () => {
 
   // Reset form
   const resetForm = () => {
-    setFormStep(1);
     setLogoPreview(null);
     setFormData({
       name: '',
@@ -273,344 +271,256 @@ const AddStartupForm: React.FC = () => {
             <DialogTitle className="text-xl">Add Your Startup to the Map</DialogTitle>
           </DialogHeader>
           
-          <div className="mt-6">
-            <div className="flex justify-between mb-6">
-              <div className="flex space-x-1">
-                {[1, 2, 3].map((step) => (
-                  <div 
-                    key={step}
-                    className={`w-3 h-3 rounded-full ${formStep === step ? 'bg-primary' : 'bg-muted'}`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-muted-foreground">Step {formStep} of 3</span>
-            </div>
-            
-            <form onSubmit={handleSubmit}>
-              {/* Step 1: Basic Information */}
-              {formStep === 1 && (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left column - Basic info */}
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="logo" className="block mb-2">Company Logo</Label>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                      {logoPreview ? (
+                        <img 
+                          src={logoPreview} 
+                          alt="Logo preview" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Upload className="w-8 h-8 text-muted-foreground" />
+                      )}
+                    </div>
                     <div>
-                      <Label htmlFor="logo" className="block mb-2">Company Logo</Label>
-                      <div className="flex items-center space-x-4">
-                        <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex items-center justify-center">
-                          {logoPreview ? (
-                            <img 
-                              src={logoPreview} 
-                              alt="Logo preview" 
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Upload className="w-8 h-8 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div>
-                          <Input
-                            id="logo"
-                            type="file"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleLogoUpload}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => document.getElementById('logo')?.click()}
-                          >
-                            Choose File
-                          </Button>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Recommended: Square image, at least 200x200px
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Company Name *</Label>
-                        <Input
-                          id="name"
-                          name="name"
-                          required
-                          value={formData.name}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="website">Website *</Label>
-                        <Input
-                          id="website"
-                          name="website"
-                          type="url"
-                          required
-                          placeholder="https://"
-                          value={formData.website}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description *</Label>
-                      <Textarea
-                        id="description"
-                        name="description"
-                        required
-                        rows={3}
-                        placeholder="Brief description of your startup..."
-                        value={formData.description}
-                        onChange={handleInputChange}
+                      <Input
+                        id="logo"
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
                       />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="size">Company Size</Label>
-                        <Input
-                          id="size"
-                          name="size"
-                          placeholder="e.g., 1-10, 11-50, 51-200"
-                          value={formData.size}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="founded">Founded Year</Label>
-                        <Input
-                          id="founded"
-                          name="founded"
-                          type="number"
-                          min="1900"
-                          max={new Date().getFullYear()}
-                          value={formData.founded}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Industries *</Label>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {industries.map((industry, index) => (
-                          <Badge
-                            key={industry.name}
-                            variant={industry.selected ? "default" : "outline"}
-                            className="cursor-pointer hover-lift"
-                            onClick={() => toggleIndustry(index)}
-                          >
-                            {industry.name}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Add custom industry"
-                          value={newIndustry}
-                          onChange={(e) => setNewIndustry(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addIndustry())}
-                        />
-                        <Button type="button" onClick={addIndustry} disabled={!newIndustry.trim()}>
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <Button type="button" onClick={() => setFormStep(2)}>
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-              
-              {/* Step 2: Location */}
-              {formStep === 2 && (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Address in Paris *</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="address"
-                          value={location.address}
-                          onChange={(e) => setLocation({ ...location, address: e.target.value })}
-                          placeholder="Enter your Paris address"
-                          className="flex-1"
-                        />
-                        <Button 
-                          type="button" 
-                          variant="outline"
-                          className="flex-shrink-0"
-                          onClick={() => {
-                            // In a real app, this would use geocoding to get coordinates from address
-                            // For now, we'll just update the marker position
-                            if (locationMarker && locationMap) {
-                              locationMarker.setLngLat([location.longitude, location.latitude]);
-                              locationMap.flyTo({
-                                center: [location.longitude, location.latitude],
-                                zoom: 14
-                              });
-                            }
-                          }}
-                        >
-                          <MapPin className="h-4 w-4 mr-1" />
-                          Locate
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Type your address or drag the pin on the map to select your location
-                      </p>
-                    </div>
-                    
-                    <div 
-                      ref={setLocationMapRef}
-                      className="w-full h-[300px] rounded-lg overflow-hidden border"
-                    />
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="latitude">Latitude</Label>
-                        <Input
-                          id="latitude"
-                          value={location.latitude.toFixed(6)}
-                          readOnly
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="longitude">Longitude</Label>
-                        <Input
-                          id="longitude"
-                          value={location.longitude.toFixed(6)}
-                          readOnly
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <Button type="button" variant="outline" onClick={() => setFormStep(1)}>
-                      Previous
-                    </Button>
-                    <Button type="button" onClick={() => setFormStep(3)}>
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-              
-              {/* Step 3: Open Roles */}
-              {formStep === 3 && (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium">Open Positions</h3>
                       <Button
                         type="button"
                         variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setCurrentRole({ ...INITIAL_ROLE });
-                          setEditingRoleIndex(null);
-                          setShowRoleForm(true);
-                        }}
+                        onClick={() => document.getElementById('logo')?.click()}
                       >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Role
+                        Choose File
                       </Button>
                     </div>
-                    
-                    {roles.length === 0 ? (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">
-                          No open roles added yet. Click "Add Role" to create one.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                        {roles.map((role, index) => (
-                          <div 
-                            key={role.id || index}
-                            className="glass p-4 rounded-lg"
-                          >
-                            <div className="flex justify-between">
-                              <h4 className="font-medium">{role.title}</h4>
-                              <div className="flex space-x-1">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 rounded-full"
-                                  onClick={() => editRole(index)}
-                                >
-                                  <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    width="16" 
-                                    height="16" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    className="lucide lucide-pencil"
-                                  >
-                                    <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                                    <path d="m15 5 4 4"/>
-                                  </svg>
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 rounded-full"
-                                  onClick={() => removeRole(index)}
-                                >
-                                  <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    width="16" 
-                                    height="16" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    className="lucide lucide-trash-2"
-                                  >
-                                    <path d="M3 6h18"/>
-                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                    <line x1="10" x2="10" y1="11" y2="17"/>
-                                    <line x1="14" x2="14" y1="11" y2="17"/>
-                                  </svg>
-                                </Button>
-                              </div>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{role.department} · {role.type}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="name">Company Name *</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website *</Label>
+                  <Input
+                    id="website"
+                    name="website"
+                    type="url"
+                    required
+                    placeholder="https://"
+                    value={formData.website}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description *</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    required
+                    rows={3}
+                    placeholder="Brief description of your startup..."
+                    value={formData.description}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="size">Company Size</Label>
+                    <Input
+                      id="size"
+                      name="size"
+                      placeholder="e.g., 1-10, 11-50"
+                      value={formData.size}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   
-                  <div className="flex justify-between">
-                    <Button type="button" variant="outline" onClick={() => setFormStep(2)}>
-                      Previous
-                    </Button>
-                    <Button type="submit">
-                      Submit
+                  <div className="space-y-2">
+                    <Label htmlFor="founded">Founded Year</Label>
+                    <Input
+                      id="founded"
+                      name="founded"
+                      type="number"
+                      min="1900"
+                      max={new Date().getFullYear()}
+                      value={formData.founded}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Industries *</Label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {industries.map((industry, index) => (
+                      <Badge
+                        key={industry.name}
+                        variant={industry.selected ? "default" : "outline"}
+                        className="cursor-pointer hover:bg-accent transition-colors"
+                        onClick={() => toggleIndustry(index)}
+                      >
+                        {industry.name}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add custom industry"
+                      value={newIndustry}
+                      onChange={(e) => setNewIndustry(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addIndustry())}
+                    />
+                    <Button type="button" onClick={addIndustry} disabled={!newIndustry.trim()}>
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              )}
-            </form>
-          </div>
+              </div>
+              
+              {/* Right column - Location and roles */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address in Paris *</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="address"
+                      value={location.address}
+                      onChange={(e) => setLocation({ ...location, address: e.target.value })}
+                      placeholder="Enter your Paris address"
+                      className="flex-1"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      className="flex-shrink-0"
+                      onClick={() => {
+                        if (locationMarker && locationMap) {
+                          locationMarker.setLngLat([location.longitude, location.latitude]);
+                          locationMap.flyTo({
+                            center: [location.longitude, location.latitude],
+                            zoom: 14
+                          });
+                        }
+                      }}
+                    >
+                      <MapPin className="h-4 w-4 mr-1" />
+                      Locate
+                    </Button>
+                  </div>
+                </div>
+                
+                <div 
+                  ref={setLocationMapRef}
+                  className="w-full h-[200px] rounded-lg overflow-hidden border"
+                />
+                
+                <Separator className="my-4" />
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label>Open Positions</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setCurrentRole({ ...INITIAL_ROLE });
+                        setEditingRoleIndex(null);
+                        setShowRoleForm(true);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Role
+                    </Button>
+                  </div>
+                  
+                  {roles.length === 0 ? (
+                    <div className="text-center py-4 bg-muted/30 rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        No open roles added yet
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                      {roles.map((role, index) => (
+                        <div 
+                          key={role.id || index}
+                          className="bg-background border rounded-lg p-3 flex justify-between items-center"
+                        >
+                          <div>
+                            <h4 className="font-medium text-sm">{role.title}</h4>
+                            <p className="text-xs text-muted-foreground">{role.department}</p>
+                          </div>
+                          <div className="flex space-x-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-full"
+                              onClick={() => editRole(index)}
+                            >
+                              <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                width="16" 
+                                height="16" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                className="lucide lucide-pencil"
+                              >
+                                <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                <path d="m15 5 4 4"/>
+                              </svg>
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-full"
+                              onClick={() => removeRole(index)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end pt-4">
+              <Button type="submit">
+                Add Startup to Map
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
       
