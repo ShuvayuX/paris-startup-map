@@ -31,8 +31,8 @@ export const filterStartups = (
     const matchesIndustries = industries.length === 0 || 
       startup.industry.some(ind => industries.includes(ind));
     
-    // Filter by open roles
-    const matchesOpenRoles = !hasOpenRoles || startup.roles.length > 0;
+    // Filter by hiring status
+    const matchesOpenRoles = !hasOpenRoles || startup.isHiring;
     
     return matchesQuery && matchesIndustries && matchesOpenRoles;
   });

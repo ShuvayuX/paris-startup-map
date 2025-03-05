@@ -1,83 +1,77 @@
 
 import React from 'react';
-import { Role } from '@/types';
-import { Briefcase, Clock, MapPin, ExternalLink } from 'lucide-react';
+import { Briefcase, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface RolesListProps {
-  roles: Role[];
+  isHiring?: boolean;
+  providesVisa?: boolean;
 }
 
-const RolesList: React.FC<RolesListProps> = ({ roles }) => {
-  if (roles.length === 0) {
-    return (
-      <div className="text-center py-6">
-        <Briefcase className="mx-auto h-12 w-12 text-muted-foreground/50" />
-        <p className="mt-2 text-muted-foreground">No open roles at the moment</p>
-      </div>
-    );
-  }
-
-  // Function to format the date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    }).format(date);
-  };
-
+const RolesList: React.FC<RolesListProps> = ({ isHiring = false, providesVisa = false }) => {
   return (
     <div className="space-y-4">
-      <h3 className="font-medium text-base">Open Positions ({roles.length})</h3>
+      <h3 className="font-medium text-base">Hiring Information</h3>
       
       <div className="space-y-3">
-        {roles.map((role) => (
-          <div 
-            key={role.id}
-            className="glass p-4 rounded-xl transition-all duration-300 hover:bg-white/90 dark:hover:bg-black/90 hover-lift"
-          >
-            <div className="flex justify-between items-start">
-              <h4 className="font-medium">{role.title}</h4>
-              <Badge variant="outline">{role.department}</Badge>
+        <div className="glass p-4 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Briefcase className="h-5 w-5 mr-2 text-muted-foreground" />
+              <span className="font-medium">Currently Hiring</span>
             </div>
-            
-            <div className="mt-1 flex items-center text-sm text-muted-foreground">
-              <Badge variant="secondary" className="mr-2">
-                {role.type}
-              </Badge>
-              {role.remote ? (
-                <span className="flex items-center">
-                  <MapPin className="h-3 w-3 mr-1" /> Remote
+            <div>
+              {isHiring ? (
+                <span className="flex items-center text-green-500">
+                  <Check className="h-5 w-5 mr-1" />
+                  Yes
                 </span>
               ) : (
-                <span className="flex items-center">
-                  <MapPin className="h-3 w-3 mr-1" /> On-site
+                <span className="flex items-center text-red-500">
+                  <X className="h-5 w-5 mr-1" />
+                  No
                 </span>
               )}
-              <span className="mx-2">•</span>
-              <span className="flex items-center">
-                <Clock className="h-3 w-3 mr-1" />
-                Posted {formatDate(role.postedAt)}
-              </span>
-            </div>
-            
-            <p className="mt-2 text-sm line-clamp-2">{role.description}</p>
-            
-            <div className="mt-3">
-              <Button 
-                size="sm" 
-                className="hover-lift focus-ring"
-                onClick={() => window.open(role.applyUrl, "_blank")}
-              >
-                Apply Now
-                <ExternalLink className="ml-1 h-3 w-3" />
-              </Button>
             </div>
           </div>
-        ))}
+        </div>
+        
+        <div className="glass p-4 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mr-2 text-muted-foreground"
+              >
+                <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+              </svg>
+              <span className="font-medium">Visa Sponsorship</span>
+            </div>
+            <div>
+              {providesVisa ? (
+                <span className="flex items-center text-green-500">
+                  <Check className="h-5 w-5 mr-1" />
+                  Yes
+                </span>
+              ) : (
+                <span className="flex items-center text-red-500">
+                  <X className="h-5 w-5 mr-1" />
+                  No
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

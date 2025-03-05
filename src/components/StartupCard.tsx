@@ -103,7 +103,7 @@ const StartupCard: React.FC<StartupCardProps> = ({ startup, isVisible }) => {
 
             <Separator className="my-6" />
 
-            <RolesList roles={startup.roles} />
+            <RolesList isHiring={startup.isHiring} providesVisa={startup.providesVisa} />
           </div>
         </div>
       </div>

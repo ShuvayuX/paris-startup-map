@@ -13,7 +13,9 @@ export interface Startup {
   industry: string[];
   size: string;
   founded: number;
-  roles: Role[];
+  isHiring: boolean;
+  providesVisa: boolean;
+  roles: Role[]; // Keep for backward compatibility
 }
 
 export interface Role {
