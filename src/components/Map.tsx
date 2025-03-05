@@ -1,21 +1,19 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Startup } from '@/types';
 import { useMapContext } from '@/lib/MapContext';
 import MapControls from './MapControls';
+import MapboxTokenInput from './MapboxTokenInput';
 import { DEFAULT_VIEW_STATE } from '@/lib/startups';
 import { useToast } from "@/components/ui/use-toast";
-
-// Temporary solution - in a real app, this would be an environment variable
-mapboxgl.accessToken = 'pk.eyJ1IjoiZXhhbXBsZXVzZXIiLCJhIjoiY2xybXBrbGp5MDUxbzJqbzJwamx1MnJmaSJ9.Ax0ESw7qy-RcnNE0LQUI5g';
 
 const Map: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   
   const { 
     filteredStartups, 
@@ -27,52 +25,77 @@ const Map: React.FC = () => {
   
   const { toast } = useToast();
 
+  const handleTokenSaved = (token: string) => {
+    setMapboxToken(token);
+  };
+
   // Initialize map
   useEffect(() => {
-    if (map.current || !mapContainer.current) return;
+    if (!mapboxToken || !mapContainer.current || map.current) return;
 
-    const newMap = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [viewState.longitude, viewState.latitude],
-      zoom: viewState.zoom,
-      pitch: viewState.pitch,
-      bearing: viewState.bearing,
-      attributionControl: false
-    });
+    // Set the token
+    mapboxgl.accessToken = mapboxToken;
 
-    newMap.addControl(new mapboxgl.AttributionControl({
-      compact: true
-    }), 'bottom-left');
+    try {
+      const newMap = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [viewState.longitude, viewState.latitude],
+        zoom: viewState.zoom,
+        pitch: viewState.pitch,
+        bearing: viewState.bearing,
+        attributionControl: false
+      });
 
-    newMap.on('load', () => {
-      setMapLoaded(true);
+      newMap.addControl(new mapboxgl.AttributionControl({
+        compact: true
+      }), 'bottom-left');
+
+      newMap.on('load', () => {
+        setMapLoaded(true);
+        toast({
+          title: "Map Loaded",
+          description: "Explore Paris startups by clicking on the markers.",
+        });
+      });
+
+      newMap.on('move', () => {
+        const { lng, lat } = newMap.getCenter();
+        setViewState({
+          longitude: lng,
+          latitude: lat,
+          zoom: newMap.getZoom(),
+          pitch: newMap.getPitch(),
+          bearing: newMap.getBearing()
+        });
+      });
+
+      newMap.on('error', (e) => {
+        console.error('Mapbox error:', e);
+        toast({
+          title: "Map Error",
+          description: "There was an error loading the map. Please check your token.",
+          variant: "destructive"
+        });
+      });
+
+      map.current = newMap;
+    } catch (error) {
+      console.error('Error initializing map:', error);
       toast({
-        title: "Map Loaded",
-        description: "Explore Paris startups by clicking on the markers.",
+        title: "Map Error",
+        description: "There was an error initializing the map.",
+        variant: "destructive"
       });
-    });
-
-    newMap.on('move', () => {
-      const { lng, lat } = newMap.getCenter();
-      setViewState({
-        longitude: lng,
-        latitude: lat,
-        zoom: newMap.getZoom(),
-        pitch: newMap.getPitch(),
-        bearing: newMap.getBearing()
-      });
-    });
-
-    map.current = newMap;
+    }
 
     return () => {
       Object.values(markersRef.current).forEach(marker => marker.remove());
       markersRef.current = {};
-      newMap.remove();
+      map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [mapboxToken]); // Only re-initialize when token changes
 
   // Update map when view state changes from outside
   useEffect(() => {
@@ -202,6 +225,8 @@ const Map: React.FC = () => {
         className="absolute inset-0 bg-muted"
       />
       
+      <MapboxTokenInput onTokenSaved={handleTokenSaved} />
+      
       <MapControls
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
@@ -209,11 +234,13 @@ const Map: React.FC = () => {
         onResetView={handleResetView}
       />
       
-      {!mapLoaded && (
+      {(!mapLoaded || !mapboxToken) && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
           <div className="flex flex-col items-center">
             <div className="loader w-10 h-10 rounded-full border-4 border-muted border-t-primary animate-spin"></div>
-            <p className="mt-4 font-medium">Loading map...</p>
+            <p className="mt-4 font-medium">
+              {!mapboxToken ? "Waiting for Mapbox token..." : "Loading map..."}
+            </p>
           </div>
         </div>
       )}
