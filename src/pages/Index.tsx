@@ -1,13 +1,41 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useEffect } from 'react';
+import { MapProvider } from '@/lib/MapContext';
+import Map from '@/components/Map';
+import Header from '@/components/Header';
+import SearchBar from '@/components/SearchBar';
+import StartupCard from '@/components/StartupCard';
+import AddStartupForm from '@/components/AddStartupForm';
+import { useMapContext } from '@/lib/MapContext';
+
+const MapContent = () => {
+  const { selectedStartup } = useMapContext();
+
+  return (
+    <div className="relative w-full h-screen overflow-hidden">
+      <Header />
+      
+      <div className="absolute top-24 left-0 right-0 z-10 px-6">
+        <SearchBar />
+      </div>
+      
+      <Map />
+      
+      <StartupCard 
+        startup={selectedStartup}
+        isVisible={!!selectedStartup}
+      />
+      
+      <AddStartupForm />
+    </div>
+  );
+};
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <MapProvider>
+      <MapContent />
+    </MapProvider>
   );
 };
 
