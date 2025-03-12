@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface MapboxTokenInputProps {
   onTokenSaved: (token: string) => void;
@@ -12,6 +14,7 @@ interface MapboxTokenInputProps {
 const MapboxTokenInput: React.FC<MapboxTokenInputProps> = ({ onTokenSaved }) => {
   const [token, setToken] = useState('');
   const [open, setOpen] = useState(false);
+  const [skipToken, setSkipToken] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -25,6 +28,16 @@ const MapboxTokenInput: React.FC<MapboxTokenInputProps> = ({ onTokenSaved }) => 
   }, [onTokenSaved]);
 
   const handleSaveToken = () => {
+    if (skipToken) {
+      localStorage.setItem('mapbox-skip-token', 'true');
+      setOpen(false);
+      toast({
+        title: "Using Map Without Token",
+        description: "You're now using the app without a Mapbox token."
+      });
+      return;
+    }
+
     if (token.trim().length < 20) {
       toast({
         title: "Invalid Token",
@@ -35,6 +48,7 @@ const MapboxTokenInput: React.FC<MapboxTokenInputProps> = ({ onTokenSaved }) => 
     }
 
     localStorage.setItem('mapbox-token', token);
+    localStorage.removeItem('mapbox-skip-token');
     onTokenSaved(token);
     setOpen(false);
     toast({
@@ -45,7 +59,9 @@ const MapboxTokenInput: React.FC<MapboxTokenInputProps> = ({ onTokenSaved }) => 
 
   const handleClearToken = () => {
     localStorage.removeItem('mapbox-token');
+    localStorage.removeItem('mapbox-skip-token');
     setToken('');
+    setSkipToken(false);
     setOpen(true);
     toast({
       title: "Token Removed",
@@ -55,12 +71,18 @@ const MapboxTokenInput: React.FC<MapboxTokenInputProps> = ({ onTokenSaved }) => 
 
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(isOpen) => {
+        // Only allow closing if we have a token or skip token
+        if (!isOpen && !token && !skipToken && !localStorage.getItem('mapbox-token') && !localStorage.getItem('mapbox-skip-token')) {
+          return;
+        }
+        setOpen(isOpen);
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Enter your Mapbox token</DialogTitle>
+            <DialogTitle>Mapbox Token</DialogTitle>
             <DialogDescription>
-              You need a Mapbox token to display the map. You can get one for free at{" "}
+              A Mapbox token is recommended to display a fully interactive map. You can get one for free at{" "}
               <a 
                 href="https://mapbox.com" 
                 target="_blank" 
@@ -77,13 +99,31 @@ const MapboxTokenInput: React.FC<MapboxTokenInputProps> = ({ onTokenSaved }) => 
               value={token}
               onChange={(e) => setToken(e.target.value)}
               className="w-full"
+              disabled={skipToken}
             />
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="skip-token" 
+                checked={skipToken}
+                onCheckedChange={(checked) => {
+                  setSkipToken(checked);
+                  if (checked) {
+                    setToken('');
+                  }
+                }}
+              />
+              <Label htmlFor="skip-token">Use app without a Mapbox token</Label>
+            </div>
             <p className="text-sm text-muted-foreground">
-              Your token will be stored in your browser's local storage.
+              {skipToken 
+                ? "You'll see a placeholder map with limited functionality." 
+                : "Your token will be stored in your browser's local storage."}
             </p>
           </div>
           <DialogFooter>
-            <Button onClick={handleSaveToken}>Save Token</Button>
+            <Button onClick={handleSaveToken}>
+              {skipToken ? "Continue Without Token" : "Save Token"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -7,6 +8,7 @@ import MapControls from './MapControls';
 import MapboxTokenInput from './MapboxTokenInput';
 import { DEFAULT_VIEW_STATE } from '@/lib/startups';
 import { useToast } from "@/components/ui/use-toast";
+import PlaceholderMap from './PlaceholderMap';
 
 const Map: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -14,6 +16,7 @@ const Map: React.FC = () => {
   const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  const [usingPlaceholder, setUsingPlaceholder] = useState(false);
   
   const { 
     filteredStartups, 
@@ -26,11 +29,19 @@ const Map: React.FC = () => {
   const { toast } = useToast();
 
   const handleTokenSaved = (token: string) => {
-    setMapboxToken(token);
+    const skipToken = localStorage.getItem('mapbox-skip-token') === 'true';
+    if (skipToken) {
+      setUsingPlaceholder(true);
+      setMapLoaded(true);
+    } else {
+      setMapboxToken(token);
+      setUsingPlaceholder(false);
+    }
   };
 
   // Initialize map
   useEffect(() => {
+    if (usingPlaceholder) return;
     if (!mapboxToken || !mapContainer.current || map.current) return;
 
     // Set the token
@@ -95,11 +106,11 @@ const Map: React.FC = () => {
       map.current?.remove();
       map.current = null;
     };
-  }, [mapboxToken]); // Only re-initialize when token changes
+  }, [mapboxToken, usingPlaceholder]); // Only re-initialize when token changes
 
   // Update map when view state changes from outside
   useEffect(() => {
-    if (!map.current) return;
+    if (usingPlaceholder || !map.current) return;
     
     const currentCenter = map.current.getCenter();
     const currentZoom = map.current.getZoom();
@@ -122,10 +133,11 @@ const Map: React.FC = () => {
         duration: 800
       });
     }
-  }, [viewState]);
+  }, [viewState, usingPlaceholder]);
 
   // Update markers when filtered startups change
   useEffect(() => {
+    if (usingPlaceholder) return;
     if (!map.current || !mapLoaded) return;
 
     // Clear existing markers
@@ -189,25 +201,56 @@ const Map: React.FC = () => {
       el.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.3), 0 2px 10px rgba(0,0,0,0.1)';
     }
     
-  }, [filteredStartups, selectedStartup, mapLoaded]);
+  }, [filteredStartups, selectedStartup, mapLoaded, usingPlaceholder]);
 
   // Map control functions
   const handleZoomIn = () => {
+    if (usingPlaceholder) {
+      setViewState({
+        ...viewState,
+        zoom: viewState.zoom + 1
+      });
+      return;
+    }
+    
     if (!map.current) return;
     map.current.zoomIn();
   };
 
   const handleZoomOut = () => {
+    if (usingPlaceholder) {
+      setViewState({
+        ...viewState,
+        zoom: Math.max(viewState.zoom - 1, 1)
+      });
+      return;
+    }
+    
     if (!map.current) return;
     map.current.zoomOut();
   };
 
   const handleResetBearing = () => {
+    if (usingPlaceholder) {
+      setViewState({
+        ...viewState,
+        bearing: 0
+      });
+      return;
+    }
+    
     if (!map.current) return;
     map.current.setBearing(0);
   };
 
   const handleResetView = () => {
+    if (usingPlaceholder) {
+      setViewState({
+        ...DEFAULT_VIEW_STATE
+      });
+      return;
+    }
+    
     if (!map.current) return;
     map.current.flyTo({
       center: [DEFAULT_VIEW_STATE.longitude, DEFAULT_VIEW_STATE.latitude],
@@ -220,10 +263,19 @@ const Map: React.FC = () => {
 
   return (
     <div className="relative w-full h-full">
-      <div 
-        ref={mapContainer} 
-        className="absolute inset-0 bg-muted"
-      />
+      {!usingPlaceholder && (
+        <div 
+          ref={mapContainer} 
+          className="absolute inset-0 bg-muted"
+        />
+      )}
+      
+      {usingPlaceholder && <PlaceholderMap 
+        startups={filteredStartups}
+        selectedStartup={selectedStartup}
+        onStartupClick={setSelectedStartup}
+        viewState={viewState}
+      />}
       
       <MapboxTokenInput onTokenSaved={handleTokenSaved} />
       
@@ -234,7 +286,7 @@ const Map: React.FC = () => {
         onResetView={handleResetView}
       />
       
-      {(!mapLoaded || !mapboxToken) && (
+      {(!mapLoaded && !usingPlaceholder) && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm">
           <div className="flex flex-col items-center">
             <div className="loader w-10 h-10 rounded-full border-4 border-muted border-t-primary animate-spin"></div>
