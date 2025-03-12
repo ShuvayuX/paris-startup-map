@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Startup, MapViewState } from '@/types';
+import { useTheme } from 'next-themes';
 
 interface PlaceholderMapProps {
   startups: Startup[];
@@ -15,6 +16,9 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
   onStartupClick,
   viewState 
 }) => {
+  const { theme } = useTheme();
+  const isDarkTheme = theme === 'dark';
+  
   // Calculate map dimensions
   const mapWidth = 1000;
   const mapHeight = 1000;
@@ -45,13 +49,13 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
   };
 
   return (
-    <div className="absolute inset-0 bg-slate-100 overflow-hidden">
+    <div className={`absolute inset-0 ${isDarkTheme ? 'bg-slate-900' : 'bg-slate-100'} overflow-hidden`}>
       <div 
         className="relative w-full h-full flex items-center justify-center" 
         style={{ perspective: '1000px' }}
       >
         <div 
-          className="absolute bg-slate-200 w-[1000px] h-[1000px] rounded-full shadow-inner"
+          className={`absolute ${isDarkTheme ? 'bg-slate-800' : 'bg-slate-200'} w-[1000px] h-[1000px] rounded-full shadow-inner`}
           style={mapStyle}
         >
           {/* Grid lines */}
@@ -59,14 +63,14 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
             {Array.from({ length: 5 }).map((_, i) => (
               <div 
                 key={`col-${i}`} 
-                className="border-r border-slate-300 h-full" 
+                className={`border-r ${isDarkTheme ? 'border-slate-700' : 'border-slate-300'} h-full`} 
                 style={{ left: `${(i + 1) * 20}%` }}
               />
             ))}
             {Array.from({ length: 5 }).map((_, i) => (
               <div 
                 key={`row-${i}`} 
-                className="border-b border-slate-300 w-full" 
+                className={`border-b ${isDarkTheme ? 'border-slate-700' : 'border-slate-300'} w-full`} 
                 style={{ top: `${(i + 1) * 20}%` }}
               />
             ))}
@@ -100,11 +104,11 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
                   left: x, 
                   top: y, 
                   boxShadow: isSelected ? '0 0 0 4px rgba(59, 130, 246, 0.3), 0 2px 10px rgba(0,0,0,0.1)' : '0 2px 10px rgba(0,0,0,0.1)',
-                  border: isSelected ? '2px solid rgb(59, 130, 246)' : '2px solid white'
+                  border: isSelected ? '2px solid rgb(59, 130, 246)' : isDarkTheme ? '2px solid rgb(30, 41, 59)' : '2px solid white'
                 }}
                 onClick={() => onStartupClick(startup)}
               >
-                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                <div className={`w-10 h-10 ${isDarkTheme ? 'bg-slate-700' : 'bg-white'} rounded-lg flex items-center justify-center overflow-hidden`}>
                   <img 
                     src={startup.logo} 
                     alt={`${startup.name} logo`} 
@@ -117,8 +121,8 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
         </div>
         
         {/* Map overlay with some text */}
-        <div className="absolute bottom-8 left-8 bg-white/90 p-3 rounded-lg text-sm text-slate-600 max-w-xs">
-          <p className="font-medium text-slate-900">Placeholder Map</p>
+        <div className={`absolute bottom-8 left-8 ${isDarkTheme ? 'bg-slate-800/90' : 'bg-white/90'} p-3 rounded-lg text-sm ${isDarkTheme ? 'text-slate-300' : 'text-slate-600'} max-w-xs`}>
+          <p className={`font-medium ${isDarkTheme ? 'text-slate-100' : 'text-slate-900'}`}>Placeholder Map</p>
           <p>This is a simple placeholder map. Add a Mapbox token for a full interactive map experience.</p>
         </div>
       </div>
