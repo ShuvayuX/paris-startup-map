@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Startup, MapViewState } from '@/types';
 import { useTheme } from 'next-themes';
@@ -49,42 +48,42 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
   };
 
   return (
-    <div className={`absolute inset-0 ${isDarkTheme ? 'bg-slate-900' : 'bg-slate-100'} overflow-hidden`}>
+    <div className="absolute inset-0 bg-[#1a1a1a] overflow-hidden">
       <div 
         className="relative w-full h-full flex items-center justify-center" 
         style={{ perspective: '1000px' }}
       >
         <div 
-          className={`absolute ${isDarkTheme ? 'bg-slate-800' : 'bg-slate-200'} w-[1000px] h-[1000px] rounded-full shadow-inner`}
+          className="absolute bg-[#222222] w-[1000px] h-[1000px] rounded-full shadow-inner"
           style={mapStyle}
         >
           {/* Grid lines */}
-          <div className="absolute inset-0 grid grid-cols-5 grid-rows-5">
-            {Array.from({ length: 5 }).map((_, i) => (
+          <div className="absolute inset-0 grid grid-cols-12 grid-rows-12">
+            {Array.from({ length: 12 }).map((_, i) => (
               <div 
                 key={`col-${i}`} 
-                className={`border-r ${isDarkTheme ? 'border-slate-700' : 'border-slate-300'} h-full`} 
-                style={{ left: `${(i + 1) * 20}%` }}
+                className="border-r border-[#333333]/30 h-full"
+                style={{ left: `${(i + 1) * (100/12)}%` }}
               />
             ))}
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div 
                 key={`row-${i}`} 
-                className={`border-b ${isDarkTheme ? 'border-slate-700' : 'border-slate-300'} w-full`} 
-                style={{ top: `${(i + 1) * 20}%` }}
+                className="border-b border-[#333333]/30 w-full"
+                style={{ top: `${(i + 1) * (100/12)}%` }}
               />
             ))}
           </div>
           
           {/* Center marker for Paris */}
           <div 
-            className="absolute w-4 h-4 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2"
+            className="absolute w-4 h-4 bg-white/80 rounded-full -translate-x-1/2 -translate-y-1/2"
             style={{ 
               left: geoToPixel(centerLng, centerLat).x, 
               top: geoToPixel(centerLng, centerLat).y 
             }}
           >
-            <div className="text-xs font-bold text-white absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <div className="text-xs font-medium text-white/90 absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
               Paris
             </div>
           </div>
@@ -103,12 +102,12 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
                 style={{ 
                   left: x, 
                   top: y, 
-                  boxShadow: isSelected ? '0 0 0 4px rgba(59, 130, 246, 0.3), 0 2px 10px rgba(0,0,0,0.1)' : '0 2px 10px rgba(0,0,0,0.1)',
-                  border: isSelected ? '2px solid rgb(59, 130, 246)' : isDarkTheme ? '2px solid rgb(30, 41, 59)' : '2px solid white'
+                  boxShadow: isSelected ? '0 0 0 4px rgba(255, 255, 255, 0.2), 0 2px 10px rgba(0,0,0,0.2)' : '0 2px 10px rgba(0,0,0,0.2)',
+                  border: isSelected ? '2px solid rgba(255, 255, 255, 0.8)' : '2px solid rgba(255, 255, 255, 0.4)'
                 }}
                 onClick={() => onStartupClick(startup)}
               >
-                <div className={`w-10 h-10 ${isDarkTheme ? 'bg-slate-700' : 'bg-white'} rounded-lg flex items-center justify-center overflow-hidden`}>
+                <div className="w-10 h-10 bg-[#333333] rounded-lg flex items-center justify-center overflow-hidden">
                   <img 
                     src={startup.logo} 
                     alt={`${startup.name} logo`} 
@@ -121,8 +120,8 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
         </div>
         
         {/* Map overlay with some text */}
-        <div className={`absolute bottom-8 left-8 ${isDarkTheme ? 'bg-slate-800/90' : 'bg-white/90'} p-3 rounded-lg text-sm ${isDarkTheme ? 'text-slate-300' : 'text-slate-600'} max-w-xs`}>
-          <p className={`font-medium ${isDarkTheme ? 'text-slate-100' : 'text-slate-900'}`}>Placeholder Map</p>
+        <div className="absolute bottom-8 left-8 bg-[#222222]/90 p-3 rounded-lg text-sm text-gray-400 max-w-xs">
+          <p className="font-medium text-white/90">Placeholder Map</p>
           <p>This is a simple placeholder map. Add a Mapbox token for a full interactive map experience.</p>
         </div>
       </div>
