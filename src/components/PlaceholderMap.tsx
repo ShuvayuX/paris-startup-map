@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Startup, MapViewState } from '@/types';
 import { useTheme } from 'next-themes';
@@ -48,13 +49,13 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
   };
 
   return (
-    <div className="absolute inset-0 bg-[#1a1a1a] overflow-hidden">
+    <div className="absolute inset-0 bg-[#0c0c0c] overflow-hidden">
       <div 
         className="relative w-full h-full flex items-center justify-center" 
         style={{ perspective: '1000px' }}
       >
         <div 
-          className="absolute bg-[#222222] w-[1000px] h-[1000px] rounded-full shadow-inner"
+          className="absolute bg-[#161616] w-[1000px] h-[1000px] rounded-full shadow-inner"
           style={mapStyle}
         >
           {/* Grid lines */}
@@ -62,14 +63,14 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
             {Array.from({ length: 12 }).map((_, i) => (
               <div 
                 key={`col-${i}`} 
-                className="border-r border-[#333333]/30 h-full"
+                className="border-r border-[#333333]/20 h-full"
                 style={{ left: `${(i + 1) * (100/12)}%` }}
               />
             ))}
             {Array.from({ length: 12 }).map((_, i) => (
               <div 
                 key={`row-${i}`} 
-                className="border-b border-[#333333]/30 w-full"
+                className="border-b border-[#333333]/20 w-full"
                 style={{ top: `${(i + 1) * (100/12)}%` }}
               />
             ))}
@@ -77,13 +78,13 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
           
           {/* Center marker for Paris */}
           <div 
-            className="absolute w-4 h-4 bg-white/80 rounded-full -translate-x-1/2 -translate-y-1/2"
+            className="absolute w-4 h-4 bg-white/90 rounded-full -translate-x-1/2 -translate-y-1/2"
             style={{ 
               left: geoToPixel(centerLng, centerLat).x, 
               top: geoToPixel(centerLng, centerLat).y 
             }}
           >
-            <div className="text-xs font-medium text-white/90 absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <div className="text-xs font-medium text-white absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
               Paris
             </div>
           </div>
@@ -102,12 +103,12 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
                 style={{ 
                   left: x, 
                   top: y, 
-                  boxShadow: isSelected ? '0 0 0 4px rgba(255, 255, 255, 0.2), 0 2px 10px rgba(0,0,0,0.2)' : '0 2px 10px rgba(0,0,0,0.2)',
-                  border: isSelected ? '2px solid rgba(255, 255, 255, 0.8)' : '2px solid rgba(255, 255, 255, 0.4)'
+                  boxShadow: isSelected ? '0 0 0 4px rgba(255, 255, 255, 0.3), 0 2px 10px rgba(0,0,0,0.3)' : '0 2px 10px rgba(0,0,0,0.3)',
+                  border: isSelected ? '2px solid rgba(255, 255, 255, 0.9)' : '2px solid rgba(255, 255, 255, 0.5)'
                 }}
                 onClick={() => onStartupClick(startup)}
               >
-                <div className="w-10 h-10 bg-[#333333] rounded-lg flex items-center justify-center overflow-hidden">
+                <div className="w-10 h-10 bg-[#222222] rounded-lg flex items-center justify-center overflow-hidden">
                   <img 
                     src={startup.logo} 
                     alt={`${startup.name} logo`} 
@@ -120,8 +121,8 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
         </div>
         
         {/* Map overlay with some text */}
-        <div className="absolute bottom-8 left-8 bg-[#222222]/90 p-3 rounded-lg text-sm text-gray-400 max-w-xs">
-          <p className="font-medium text-white/90">Placeholder Map</p>
+        <div className="absolute bottom-8 left-8 bg-[#161616]/90 p-3 rounded-lg text-sm text-gray-400 max-w-xs">
+          <p className="font-medium text-white">Placeholder Map</p>
           <p>This is a simple placeholder map. Add a Mapbox token for a full interactive map experience.</p>
         </div>
       </div>
