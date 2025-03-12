@@ -6,6 +6,7 @@ import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import StartupCard from '@/components/StartupCard';
 import AddStartupForm from '@/components/AddStartupForm';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useMapContext } from '@/lib/MapContext';
 
 const MapContent = () => {
@@ -27,6 +28,11 @@ const MapContent = () => {
       />
       
       <AddStartupForm />
+      
+      {/* Theme toggle button */}
+      <div className="absolute top-2 right-2 z-50">
+        <ThemeToggle />
+      </div>
     </div>
   );
 };
