@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Startup, MapViewState } from '@/types';
 import { useTheme } from 'next-themes';
-import { Cube, Building2, Mountain } from 'lucide-react';
+import { Box, Building2, Mountain } from 'lucide-react';
 
 interface PlaceholderMapProps {
   startups: Startup[];
@@ -137,7 +137,7 @@ const PlaceholderMap: React.FC<PlaceholderMapProps> = ({
                   ) : i % 3 === 1 ? (
                     <Building2 className="w-5 h-5 text-[#4a5568]/30" />
                   ) : (
-                    <Cube className="w-4 h-4 text-[#4a5568]/30" />
+                    <Box className="w-4 h-4 text-[#4a5568]/30" />
                   )}
                 </div>
               );
